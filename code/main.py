@@ -19,19 +19,11 @@ if __name__ == "__main__":
     XYZw = Normalized(XYZw)
 
     # CIECAM02
-    CIECAM02(XYZ, XYZw).Forward()
+    perceptual_attributes = CIECAM02(XYZ, XYZw).Forward()
 
-
-    
-
-
-
-    # plt.imshow(img)
-    # plt.title("Original img")
-    # plt.figure()
-    # plt.imshow(XYZ)
-    # plt.title("XYZ")
-    # plt.figure()
-    # plt.imshow(XYZw)
-    # plt.title("XYZw")
+    plt.imshow(img)
+    plt.title("Original img")
+    plt.figure()
+    plt.imshow(XYZ)
+    plt.title("XYZ")
     plt.show()

@@ -29,12 +29,12 @@ class CIECAM02:
         LMS = np.transpose(np.tensordot(self.MCAT02, XYZ, axes=([0], [2])), (1, 2, 0))
         return LMS
     
-    def ChromaticTransform(self):
+    def ChromaticTransform(self, XYZ):
         # XYZ -> LMS 
         # Warning
         # 1. using normalized for LMS Conversion have negative number
         # 2. bias for computing Lc, Mc, Sc divide zero problem
-        LMS = self.LMSConversion(self.XYZ)
+        LMS = self.LMSConversion(XYZ)
         LMS = Normalized(LMS)+1
         LMSw = self.LMSConversion(self.XYZw)
         LMSw = Normalized(LMSw)+1
@@ -78,20 +78,32 @@ class CIECAM02:
 
         return np.array([C1, C2, C3])
 
-    def ComputingPreceptualAttributes(self, Cs, LMSap):
+    def ComputingPreceptualAttributes(self, Cs, LMSap, Cws, LMSwap):
+        # Get for convenient
         Lap = LMSap[:, :, 0]
         Map = LMSap[:, :, 1]
         Sap = LMSap[:, :, 2]
         C1 = Cs[0]
         C2 = Cs[1]
         C3 = Cs[2]
+        Lwap = LMSwap[:, :, 0]
+        Mwap = LMSwap[:, :, 1]
+        Swap = LMSwap[:, :, 2]
+        Cw1 = Cws[0]
+        Cw2 = Cws[1]
+        Cw3 = Cws[2]
 
         # Compute necessary parameters
         n = self.Yb/self.XYZw[:, :, 1]
         Nbb = 0.725*(1/n)**0.2
         z = 1.48+(n)**0.5
 
+        k = 1/(5*self.La+1)
+        FL = 0.2*k**4*5*self.La+0.1*(1-k**4)**2*(5*self.La)**(1/3)
+
+
         A = (2*Lap+Map+1/20*Sap-0.305)*Nbb
+        Aw = (2*Lwap+Mwap+1/20*Swap-0.305)*Nbb
 
         a = C1-1/11*C2
         b = 1/2*(C2-C1+C1-C3)/4.5
@@ -100,22 +112,33 @@ class CIECAM02:
         h_rad = np.arctan2(b, a)
         h_deg = np.degrees(h_rad)
         h = np.mod(h_deg, 360)
+        print(np.min(h), np.median(h), np.max(h))
 
         # Lightness
+        J = 100*(A/Aw)**(self.c*z)
 
         # Brightness
+        Q = (4/self.c)*(np.sqrt((1/100)*J)*(Aw+4))*FL**(1/4)
 
         # Chroma
+        et = (1/4)*(np.cos((np.pi/180)*h+2)+3.8)
+        t = ((50000/13)*self.Nc*Nbb*et*np.sqrt(a**2+b**2))/(Lap+Map+(21/20)*Sap)
+        C = t**0.9*np.sqrt(1/100*J)*(1.64-0.29**n)**0.73
 
         # Colorfulness
+        M = C*FL**(1/4)
 
         # Saturation
+        s = 100*np.sqrt(M/Q)
 
-        
+        perceptual_attributes = {"h": h, "J": J, "Q": Q, "C": C, "M": M, "s": s}
 
+        return perceptual_attributes
 
     def Forward(self):
-        LMSap = self.ChromaticTransform()
+        LMSap = self.ChromaticTransform(self.XYZ)
+        LMSwap = self.ChromaticTransform(self.XYZw)
         Cs = self.OpponentColorConversion(LMSap)
-        self.ComputingPreceptualAttributes(Cs, LMSap)
+        Cws = self.OpponentColorConversion(LMSwap)
+        return self.ComputingPreceptualAttributes(Cs, LMSap, Cws, LMSwap)
 
