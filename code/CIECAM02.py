@@ -35,9 +35,9 @@ class CIECAM02:
         # 1. using normalized for LMS Conversion have negative number
         # 2. bias for computing Lc, Mc, Sc divide zero problem
         LMS = self.LMSConversion(XYZ)
-        LMS = Normalized(LMS)+1
+        LMS = Normalized(LMS)+1e-10
         LMSw = self.LMSConversion(self.XYZw)
-        LMSw = Normalized(LMSw)+1
+        LMSw = Normalized(LMSw)+1e-10
 
         # Compute the degree of adaptation
         D = self.F*(1-(1/3.6)*np.exp(-(self.La+42)/92))
@@ -57,9 +57,9 @@ class CIECAM02:
         LMSp = np.transpose(np.tensordot(self.MH, LMSp, axes=([0], [2])), (1, 2, 0))
 
         # Non-Linear compression
-        Lap = (400*(FL*LMSp[:, :, 0]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 0]/100))+0.1
-        Map = (400*(FL*LMSp[:, :, 1]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 1]/100))+0.1
-        Sap = (400*(FL*LMSp[:, :, 2]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 2]/100))+0.1
+        Lap = (400*(FL*LMSp[:, :, 0]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 0]/100)**(0.42))+0.1
+        Map = (400*(FL*LMSp[:, :, 1]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 1]/100)**(0.42))+0.1
+        Sap = (400*(FL*LMSp[:, :, 2]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 2]/100)**(0.42))+0.1
 
         LMSap = np.array([Lap, Map, Sap])
         LMSap = np.transpose(LMSap, (1, 2, 0))
@@ -112,7 +112,7 @@ class CIECAM02:
         h_rad = np.arctan2(b, a)
         h_deg = np.degrees(h_rad)
         h = np.mod(h_deg, 360)
-        print(np.min(h), np.median(h), np.max(h))
+        print(np.min(h), h[100, 100], np.max(h))
 
         # Lightness
         J = 100*(A/Aw)**(self.c*z)

@@ -6,7 +6,8 @@ from table1 import *
 from CIECAM02 import *
 
 if __name__ == "__main__":
-    img = plt.imread("./images/Bird.jpg")  # read image
+    img = plt.imread("./images/Color.png")  # read image
+    img = img[:, :, :3]
     size = img.shape
 
     # Device Characteristic Modeling
@@ -21,9 +22,13 @@ if __name__ == "__main__":
     # CIECAM02
     perceptual_attributes = CIECAM02(XYZ, XYZw).Forward()
 
+
     plt.imshow(img)
     plt.title("Original img")
     plt.figure()
     plt.imshow(XYZ)
-    plt.title("XYZ")
+    plt.title("XYZ1")
+    plt.figure()
+    plt.imshow(XYZw)
+    plt.title("XYZw1")
     plt.show()
