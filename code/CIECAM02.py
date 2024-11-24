@@ -112,7 +112,7 @@ class CIECAM02:
         h_rad = np.arctan2(b, a)
         h_deg = np.degrees(h_rad)
         h = np.mod(h_deg, 360)
-        print(np.min(h), h[100, 100], np.max(h))
+        # print(np.min(h), h[100, 100], np.max(h))
 
         # Lightness
         J = 100*(A/Aw)**(self.c*z)
