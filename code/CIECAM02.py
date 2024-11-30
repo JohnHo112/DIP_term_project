@@ -26,18 +26,13 @@ class CIECAM02:
         )
     
     def LMSConversion(self, XYZ):
-        LMS = np.transpose(np.tensordot(self.MCAT02, XYZ, axes=([0], [2])), (1, 2, 0))
+        LMS = np.transpose(np.tensordot(self.MCAT02, XYZ, axes=([1], [2])), (1, 2, 0))
         return LMS
     
     def ChromaticTransform(self, XYZ):
         # XYZ -> LMS 
-        # Warning
-        # 1. using normalized for LMS Conversion have negative number
-        # 2. bias for computing Lc, Mc, Sc divide zero problem
         LMS = self.LMSConversion(XYZ)
-        LMS = Normalized(LMS)+1e-10
         LMSw = self.LMSConversion(self.XYZw)
-        LMSw = Normalized(LMSw)+1e-10
 
         # Compute the degree of adaptation
         D = self.F*(1-(1/3.6)*np.exp(-(self.La+42)/92))
@@ -53,14 +48,13 @@ class CIECAM02:
         FL = 0.2*k**4*5*self.La+0.1*(1-k**4)**2*(5*self.La)**(1/3)
 
         # Convert the adapted LMS value (Lc, Mc, Sc) to Hunt-Pointer-Estévez (HPE) space for response compression
-        LMSp = np.transpose(np.tensordot(np.linalg.inv(self.MCAT02), LMSc, axes=([0], [2])), (1, 2, 0))
-        LMSp = np.transpose(np.tensordot(self.MH, LMSp, axes=([0], [2])), (1, 2, 0))
+        LMSp = np.transpose(np.tensordot(np.linalg.inv(self.MCAT02), LMSc, axes=([1], [2])), (1, 2, 0))
+        LMSp = np.transpose(np.tensordot(self.MH, LMSp, axes=([1], [2])), (1, 2, 0))
 
         # Non-Linear compression
         Lap = (400*(FL*LMSp[:, :, 0]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 0]/100)**(0.42))+0.1
         Map = (400*(FL*LMSp[:, :, 1]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 1]/100)**(0.42))+0.1
         Sap = (400*(FL*LMSp[:, :, 2]/100)**(0.42))/(27.13+(FL*LMSp[:, :, 2]/100)**(0.42))+0.1
-
         LMSap = np.array([Lap, Map, Sap])
         LMSap = np.transpose(LMSap, (1, 2, 0))
 
@@ -80,45 +74,40 @@ class CIECAM02:
 
     def ComputingPreceptualAttributes(self, Cs, LMSap, Cws, LMSwap):
         # Get for convenient
-        Lap = LMSap[:, :, 0]
-        Map = LMSap[:, :, 1]
-        Sap = LMSap[:, :, 2]
         C1 = Cs[0]
         C2 = Cs[1]
         C3 = Cs[2]
-        Lwap = LMSwap[:, :, 0]
-        Mwap = LMSwap[:, :, 1]
-        Swap = LMSwap[:, :, 2]
+        Lap = LMSap[:, :, 0]
+        Map = LMSap[:, :, 1]
+        Sap = LMSap[:, :, 2]
         Cw1 = Cws[0]
         Cw2 = Cws[1]
         Cw3 = Cws[2]
+        Lwap = LMSwap[:, :, 0]
+        Mwap = LMSwap[:, :, 1]
+        Swap = LMSwap[:, :, 2]
 
         # Compute necessary parameters
         n = self.Yb/self.XYZw[:, :, 1]
         Nbb = 0.725*(1/n)**0.2
         z = 1.48+(n)**0.5
-
         k = 1/(5*self.La+1)
         FL = 0.2*k**4*5*self.La+0.1*(1-k**4)**2*(5*self.La)**(1/3)
-
-
         A = (2*Lap+Map+1/20*Sap-0.305)*Nbb
         Aw = (2*Lwap+Mwap+1/20*Swap-0.305)*Nbb
-
-        a = C1-1/11*C2
-        b = 1/2*(C2-C1+C1-C3)/4.5
+        a = Lap-12/11*Map+1/11*Sap
+        b = 1/9*(Lap+Map-2*Sap)
 
         # H
         h_rad = np.arctan2(b, a)
         h_deg = np.degrees(h_rad)
         h = np.mod(h_deg, 360)
-        # print(np.min(h), h[100, 100], np.max(h))
 
         # Lightness
         J = 100*(A/Aw)**(self.c*z)
 
         # Brightness
-        Q = (4/self.c)*(np.sqrt((1/100)*J)*(Aw+4))*FL**(1/4)
+        Q = (4/self.c)*np.sqrt((1/100)*J)*(Aw+4)*FL**(1/4)
 
         # Chroma
         et = (1/4)*(np.cos((np.pi/180)*h+2)+3.8)
@@ -132,7 +121,6 @@ class CIECAM02:
         s = 100*np.sqrt(M/Q)
 
         perceptual_attributes = {"h": h, "J": J, "Q": Q, "C": C, "M": M, "s": s}
-
         return perceptual_attributes
 
     def Forward(self):

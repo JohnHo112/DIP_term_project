@@ -1,9 +1,19 @@
 import numpy as np
 
+def Normalized255To1(img):
+    normalized_image = np.zeros_like(img, dtype=np.float64)
+    M, N, O = img.shape
+    for o in range(O):
+        normalized_image[:, :, o] = (img[:, :, o])/(255)
+
+    return normalized_image
+
 def Normalized(img):
-    min_val = img.min()
-    max_val = img.max()
-    normalized_image = (img - min_val) / (max_val - min_val)
-    normalized_image = normalized_image.astype(np.float64)
+    normalized_image = np.zeros_like(img, dtype=np.float64)
+    M, N, O = img.shape
+    for o in range(O):
+        channel_min = np.min(img[:, :, o])
+        channel_max = np.max(img[:, :, o])
+        normalized_image[:, :, o] = (img[:, :, o]-channel_min)/(channel_max-channel_min)
 
     return normalized_image
