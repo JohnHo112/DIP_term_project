@@ -4,7 +4,7 @@ from ulit import *
 
 class InverseCIECAM02:
     
-    def __init__(self, Wl, h, J, C, La=100, Yb=25, c=0.69, Nc=1, F=1):
+    def __init__(self, Wl, h, J, C, La=63, Yb=25, c=0.69, Nc=1, F=1):
         self.XYZw = Wl
         self.h = h
         self.J = J
@@ -85,7 +85,7 @@ class InverseCIECAM02:
         t = (self.C/(np.sqrt(self.J/100)*(1.64-0.29**n)**0.73))**(1/0.9)
 
         # Step 2: Calculate et form h
-        et = np.cos(self.h*np.pi/180+2)+3.8
+        et = (np.cos(self.h*np.pi/180+2)+3.8)
 
         # Step 3: Calculate A from Aw and J
         # get the Lw, Mw, Sw
@@ -108,9 +108,9 @@ class InverseCIECAM02:
         LMSap = np.transpose(np.tensordot(M_inv, Apab, axes=([1], [2])), (1, 2, 0))
 
         # Step 6: Use the inverse nonlinearity to compute L', M' and S'
-        Lp = (100/FL*((27.13*(LMSap[:, :, 0]-0.1))/(400-(LMSap[:, :, 0]-0.1))))**(1/0.42)
-        Mp = (100/FL*((27.13*(LMSap[:, :, 1]-0.1))/(400-(LMSap[:, :, 1]-0.1))))**(1/0.42)
-        Sp = (100/FL*((27.13*(LMSap[:, :, 2]-0.1))/(400-(LMSap[:, :, 2]-0.1))))**(1/0.42)
+        Lp = 100/FL*(27.13/((400/(LMSap[:, :, 0]-0.1)-1)))**(1/0.42)
+        Mp = 100/FL*(27.13/((400/(LMSap[:, :, 1]-0.1)-1)))**(1/0.42)
+        Sp = 100/FL*(27.13/((400/(LMSap[:, :, 2]-0.1)-1)))**(1/0.42)
         LMSp = np.transpose(np.array([Lp, Mp, Sp]), (1, 2, 0))
 
         # Step 7: Convert to Lc, Mc, and Sc via linear transform
