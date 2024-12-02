@@ -27,40 +27,17 @@ if __name__ == "__main__":
     # Get white point
     Wf = WhitePoint(RGBi, M1, gamma1)
 
-    print(np.min(XYZi), np.max(XYZi))
-    print(np.min(Wf), np.max(Wf))
-
     # CIECAM02
     perceptual_attributes = CIECAM02(XYZi, Wf).Forward()
     h = perceptual_attributes["h"]
-    # print(np.min(h), h[100, 100], np.max(h))
     J = perceptual_attributes["J"]
     C = perceptual_attributes["C"]
-
-    # plt.imshow(h)
-    # plt.title("h")
-    # plt.figure()
-    # plt.imshow(J)
-    # plt.title("J")
-    # plt.figure()
-    # plt.imshow(C)
-    # plt.title("C")
 
     # Get white point
     Wl = WhitePoint(RGBi, M2, gamma2)
 
     # Inverse CIECAM02
     XYZe = InverseCIECAM02(Wl, h, J, C).Forward()
-
-    print(np.min(XYZe), np.max(XYZe))
-    print(np.min(Wl), np.max(Wl))
-
-    plt.figure()
-    plt.imshow(Normalized(XYZi))
-    plt.title("XYZi")
-    plt.figure()
-    plt.imshow(Normalized(XYZe))
-    plt.title("XYZe")
 
     # Post Gamut Mapping
     RGBe = PostGamutMapping(XYZe, RGBi, gamma2, J, C)

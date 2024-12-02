@@ -9,10 +9,15 @@ def PostGamutMapping(XYZe, img, gamma, J, C):
 
     # Calculate RGBe
     RGBel = np.transpose(np.tensordot(M2_inv, XYZe, axes=([1], [2])), (1, 2, 0))
-    RGPp = RGBel**(1/gamma)
+    # Keep the sign
+    RGPp = np.sign(RGBel)*np.abs(RGBel)**(1/gamma)
 
     # Step 2: RGB with a hard threshold
     RGBc = np.clip(RGPp, 0, 1)
+
+    # Normalized J and C to 0-1
+    J = NormalizedOneChannel(J)
+    C = NormalizedOneChannel(C)
     
     # Step 3: Blend the clipped pixel value with the original pixel value
     a = (1-J*C)*RGBc[:, :, 0]+J*C*img[:, :, 0]

@@ -17,3 +17,12 @@ def Normalized(img):
         normalized_image[:, :, o] = (img[:, :, o]-channel_min)/(channel_max-channel_min)
 
     return normalized_image
+
+def NormalizedOneChannel(img):
+    normalized_image = np.zeros_like(img, dtype=np.float64)
+    M, N= img.shape
+    channel_min = np.min(img)
+    channel_max = np.max(img)
+    normalized_image = (img-channel_min)/(channel_max-channel_min)
+
+    return normalized_image
