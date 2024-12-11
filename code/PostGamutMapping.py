@@ -2,10 +2,10 @@ import numpy as np
 from table1 import *
 from ulit import *
 
-def PostGamutMapping(XYZe, img, gamma, J, C):
+def PostGamutMapping(XYZe, img, M, gamma, J, C):
     # Step 1: XYZe -> RGBe
     # Inverse M2
-    M2_inv = np.linalg.inv(M2)
+    M2_inv = np.linalg.inv(M)
 
     # Calculate RGBe
     RGBel = np.transpose(np.tensordot(M2_inv, XYZe, axes=([1], [2])), (1, 2, 0))
@@ -26,4 +26,4 @@ def PostGamutMapping(XYZe, img, gamma, J, C):
 
     RGBe = np.transpose(np.array([a, b, c]), (1, 2, 0))
     
-    return RGBe
+    return RGBc

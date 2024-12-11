@@ -10,57 +10,58 @@ from BlueCompensation import *
 from WhiteBalance import *
 from AdaptiveAdjustment import *
 
-def GenerateRGBImage(size):
-    M, N, O = size
-    img = np.zeros(size, dtype=np.uint8)
-    img[:200, :, :] = np.array([255, 0, 0])
-    img[200:400, :, :] = np.array([0, 255, 0])
-    img[400:, :, :] = np.array([0, 0, 255])
-    return img
-
 if __name__ == "__main__":
-    RGBi = plt.imread("DIP_term_project\code\images\dust3.jpg")  # read image
+    RGBi = plt.imread("./images/LowContrast1.jpg")  # read image
     RGBi = RGBi[:, :, :3]
     RGBi = Normalized255To1(RGBi)
     size = RGBi.shape
-
-    # Pre-posting
-    # Blue channel compensation
-    RGBi_compensation = Blue_Channel_compensation(RGBi)
-
-    # white balance
-    RGBi_balance = mean_white_balance(RGBi_compensation)
-
+    
     # Device Characteristic Modeling
-    XYZi = CharacteristicModel(RGBi_balance, M1, gamma1)
+    XYZi = CharacteristicModel(RGBi, sRGBM, sRGBgamma)
 
     # Get white point
-    Wf = WhitePoint(RGBi_balance, M1, gamma1)
+    Wf = WhitePoint(XYZi, sRGBM, sRGBgamma)
+    Wf[:, :, 0] = 1
+    Wf[:, :, 1] = 1 
+    Wf[:, :, 2] = 1
+    Wf = CharacteristicModel(Wf, sRGBM, sRGBgamma)
 
     # CIECAM02
     perceptual_attributes = CIECAM02(XYZi, Wf).Forward()
     h = perceptual_attributes["h"]
+    h = np.uint16(h)
     J = perceptual_attributes["J"]
     C = perceptual_attributes["C"]
-
-    # Adaptive adjustment
-    h, C , J = adaptive_adjustment(h, C, J)
+    original_max_C = np.max(C)
+    C = NormalizedOneChannel(C)
+    C = Normalized1To255(C)
+    pC = CreatePDF(C, 256)
+    plt.bar(range(len(pC)), pC)
+    plt.figure()
+    C = np.uint8(C)
+    C = Equalization(C, 256)
+    pC = CreatePDF(C, 256)
+    plt.bar(range(len(pC)), pC)
+    plt.figure()
+    C = C/255
+    C = C*original_max_C
 
     # Get white point
-    Wl = WhitePoint(RGBi, M2, gamma2)
+    Wl = WhitePoint(XYZi, sRGBM, sRGBgamma)
+    Wl[:, :, 0] = 1
+    Wl[:, :, 1] = 1 
+    Wl[:, :, 2] = 1
+    Wl = CharacteristicModel(Wl, sRGBM, sRGBgamma)
 
     # Inverse CIECAM02
     XYZe = InverseCIECAM02(Wl, h, J, C).Forward()
 
     # Post Gamut Mapping
-    RGBe = PostGamutMapping(XYZe, RGBi, gamma2, J, C)
+    RGBe = PostGamutMapping(XYZe, RGBi, sRGBM, sRGBgamma, J, C)
 
     plt.figure()
     plt.imshow(RGBi)
-    plt.title("Original img")
-    plt.figure()
-    plt.imshow(RGBi_balance)
-    plt.title("RGBi_balance")
+    plt.title("original image")
     plt.figure()
     plt.imshow(RGBe)
     plt.title("RGBe")

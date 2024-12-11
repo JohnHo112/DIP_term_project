@@ -108,9 +108,9 @@ class InverseCIECAM02:
         LMSap = np.transpose(np.tensordot(M_inv, Apab, axes=([1], [2])), (1, 2, 0))
 
         # Step 6: Use the inverse nonlinearity to compute L', M' and S'
-        Lp = 100/FL*(27.13/((400/(LMSap[:, :, 0]-0.1)-1)))**(1/0.42)
-        Mp = 100/FL*(27.13/((400/(LMSap[:, :, 1]-0.1)-1)))**(1/0.42)
-        Sp = 100/FL*(27.13/((400/(LMSap[:, :, 2]-0.1)-1)))**(1/0.42)
+        Lp = np.sign(LMSap[:, :, 0]-0.1)*100/FL*np.abs((27.13/((400/(LMSap[:, :, 0]-0.1+1e-10)-1+1e-10))))**(1/0.42)
+        Mp = np.sign(LMSap[:, :, 1]-0.1)*100/FL*np.abs((27.13/((400/(LMSap[:, :, 1]-0.1+1e-10)-1+1e-10))))**(1/0.42)
+        Sp = np.sign(LMSap[:, :, 2]-0.1)*100/FL*np.abs((27.13/((400/(LMSap[:, :, 2]-0.1+1e-10)-1+1e-10))))**(1/0.42)
         LMSp = np.transpose(np.array([Lp, Mp, Sp]), (1, 2, 0))
 
         # Step 7: Convert to Lc, Mc, and Sc via linear transform
