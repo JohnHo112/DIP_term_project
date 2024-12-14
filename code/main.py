@@ -7,13 +7,14 @@ from CIECAM02 import *
 from Inverse_CIECAM02 import *
 from PostGamutMapping import *
 from ContrastAdjustment import *
+from other_method import *
 
 from BlueCompensation import *
 from WhiteBalance import *
 from AdaptiveAdjustment import *
 
 if __name__ == "__main__":
-    RGBi = plt.imread("./images/test2.jpg")  # read image
+    RGBi = plt.imread("DIP_term_project/code/images/test2.jpg")  # read image
     RGBi = RGBi[:, :, :3]
     RGBi = Normalized255To1(RGBi)
     size = RGBi.shape
@@ -80,6 +81,9 @@ if __name__ == "__main__":
     XYZe4 = InverseCIECAM02(Wl, h, J, C4).Forward()
     RGBe4 = PostGamutMapping(XYZe4, RGBi, sRGBM, sRGBgamma, J, C4) 
 
+    PSNR(RGBi, RGBe)
+    SSIM(RGBi, RGBe)
+
     plt.imshow(RGBi)
     plt.title("original image")
     
@@ -97,3 +101,5 @@ if __name__ == "__main__":
     plt.imshow(RGBe4)
     plt.title("CLAHE blue adj")
     plt.show()
+
+    other_main(RGBi)

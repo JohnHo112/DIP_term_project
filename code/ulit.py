@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from skimage.metrics import structural_similarity as ssim
 # from ContrastAdjustment import *
 
 def Normalized255To1(img):
@@ -76,3 +77,34 @@ def GetW_RGB(img):
     # 提取對應像素的 [B, G, R] 值（OpenCV 預設讀取為 BGR 格式）
     b, g, r = img[max_index]
     return np.array([r, g, b])
+
+
+def PSNR(original, enhanced):
+    # 確保影像格式為浮點型，避免溢出
+    #original = original.astype(np.float64)
+    #enhanced = enhanced.astype(np.float64)
+    
+    # 計算 MSE（均方誤差）
+    mse = np.mean((original - enhanced) ** 2)
+    
+    
+    # 計算 PSNR
+    max_pixel = 255.0  # 假設影像像素範圍為 0-255
+    psnr = 10 * np.log10((max_pixel ** 2) / mse)
+
+    print(f"PSNR Value: {psnr}")
+
+
+def SSIM(reference_image, enhanced_image):
+    #reference_image = reference_image.astype(np.uint8)
+    #enhanced_image = enhanced_image.astype(np.uint8)
+    ssim_value, ssim_map = ssim(reference_image, enhanced_image, multichannel=True, full=True)
+    print(f"SSIM Value: {ssim_value}")
+
+    # 顯示 SSIM 差異圖
+    #plt.figure(figsize=(8, 6))
+    #plt.imshow(ssim_map, cmap='viridis')  # 選擇 'viridis' 或其他喜歡的 colormap
+    #plt.colorbar()  # 添加顏色條
+    #plt.title(f"SSIM Difference Map\nSSIM Value: {ssim_value:.4f}")
+    #plt.axis('off')  # 關閉座標軸
+    #plt.show()
