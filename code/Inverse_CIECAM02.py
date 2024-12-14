@@ -98,7 +98,7 @@ class InverseCIECAM02:
         # Step 4: Calculate a and b from t, et, h and A
         e = 12500/13*self.Nc*Nbb*et
         Ap = A/Nbb+0.305
-        k = Ap/(e/t+11/23*np.cos(np.deg2rad(self.h))+108/23*np.sin(np.deg2rad(self.h)))
+        k = Ap/(e/(t+1e-10)+11/23*np.cos(np.deg2rad(self.h))+108/23*np.sin(np.deg2rad(self.h))+1e-10)
         a = k*np.cos(np.deg2rad(self.h))
         b = k*np.sin(np.deg2rad(self.h))
 

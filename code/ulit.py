@@ -1,18 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+# from ContrastAdjustment import *
 
-# Normalizeed RGB channel 
 def Normalized255To1(img):
-    normalized_image = np.zeros_like(img, dtype=np.float64)
-    M, N, O = img.shape
-    for o in range(O):
-        normalized_image[:, :, o] = (img[:, :, o])/(255)
-
+    normalized_image = img/255
     return normalized_image
 
 def Normalized1To255(img):
-    img = np.uint8(img*255)
-    return img
+    normalized_image = np.uint8(img*255)
+    return normalized_image
 
 def Normalized(img):
     normalized_image = np.zeros_like(img, dtype=np.float64)
@@ -24,14 +20,6 @@ def Normalized(img):
 
     return normalized_image
 
-def NormalizedALLChannel(img):
-    normalized_image = np.zeros_like(img, dtype=np.float64)
-    min = np.min(img)
-    max = np.max(img)
-    normalized_image = (img-min)/(max-min)
-
-    return normalized_image
-
 def NormalizedOneChannel(img):
     normalized_image = np.zeros_like(img, dtype=np.float64)
     M, N= img.shape
@@ -40,6 +28,16 @@ def NormalizedOneChannel(img):
     normalized_image = (img-channel_min)/(channel_max-channel_min)
 
     return normalized_image
+
+def CreateHueMask(h, low_degree, high_degree):
+    return ((h>low_degree)&(h<high_degree))
+
+def GammaCorrection(img, gamma):
+    img_max = np.max(img)
+    new_img = NormalizedOneChannel(img)*255
+    new_img = 255*(new_img/255)**gamma
+    new_img = Normalized255To1(new_img)*img_max
+    return new_img
 
 def EstimateWhitePointTransform(W_RGB):
     # 標準 D65 白點 (W_XYZ)
@@ -78,55 +76,3 @@ def GetW_RGB(img):
     # 提取對應像素的 [B, G, R] 值（OpenCV 預設讀取為 BGR 格式）
     b, g, r = img[max_index]
     return np.array([r, g, b])
-
-def CreatePDF(img, bar_num):
-    M, N = img.shape
-    pr = np.zeros(bar_num)
-    for m in range(M):
-        for n in range(N):
-            pr[img[m, n]] += 1
-    pr /= M*N
-
-    return pr
-
-def Equalization(img, bar_num):
-    pr = CreatePDF(img, bar_num)
-    sk = np.zeros(len(pr))
-    for k in range(len(sk)):
-        sk[k] = (len(sk)-1)*np.sum(pr[:k])
-
-    return Transformation(img, sk)
-
-def find_closest_index(array, value):
-    return np.abs(array - value).argmin()
-
-def Matching(img, pr, pz):
-    L = len(pr)
-    sk = np.zeros(L)
-    Gz = np.zeros(L)
-    zr = np.zeros(L) 
-    for k in range(L):
-        sk[k] = (L-1)*np.sum(pr[:k+1])
-    sk = np.int16(np.round(sk))
-
-    for k in range(L):
-        Gz[k] = (L-1)*np.sum(pz[:k+1])
-    Gz = np.int16(np.round(Gz))
-
-    for r in range(len(zr)):
-        closest_index = find_closest_index(Gz, sk[r])
-        zr[r] = closest_index
-
-    return Transformation(img, zr)
-
-def Transformation(img, zr):
-    M, N = img.shape
-    new_img = np.zeros_like(img)
-    for m in range(M):
-        for n in range(N):
-            new_img[m, n] = zr[img[m, n]]
-    new_img = np.int16(np.round(new_img))
-    return new_img
-
-def Gaussian(x, mu, sigma):
-    return (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * ((x - mu) / sigma)**2)

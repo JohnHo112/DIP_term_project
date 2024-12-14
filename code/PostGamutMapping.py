@@ -24,6 +24,5 @@ def PostGamutMapping(XYZe, img, M, gamma, J, C):
     b = (1-J*C)*RGBc[:, :, 1]+J*C*img[:, :, 1]
     c = (1-J*C)*RGBc[:, :, 2]+J*C*img[:, :, 2]
 
-    RGBe = np.transpose(np.array([a, b, c]), (1, 2, 0))
-    
+    RGBe = np.transpose(np.array([a, b, c]), (1, 2, 0)) 
     return RGBc
